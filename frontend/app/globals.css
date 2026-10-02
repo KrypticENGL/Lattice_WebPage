@@ -1,26 +1,205 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* Colors are taken from the Lattice app (src/ui/theme.css). The app is dark-only. */
+@theme {
+  --color-bg: #0b1118;
+  --color-surface: #0f1720;
+  --color-raised: #142030;
+  --color-line: #1c2733;
+  --color-line-strong: #2a394a;
+  --color-ink: #d7dee6;
+  --color-muted: #7d8a99;
+  --color-lime: #c9e265;
+  --color-lime-ink: #11170a;
+  --color-danger: #f0716a;
+
+  --font-sans: var(--font-plex-sans), "Segoe UI Variable", system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), "Cascadia Code", Consolas, monospace;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  background: var(--color-bg);
+  color-scheme: dark;
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* Show C++ exactly as typed: no "->" or "!=" ligatures. */
+code,
+pre,
+.font-mono,
+.mem text {
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-lime) 35%, transparent);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-lime);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ---------- Memory diagram language (shared by the demo and the feature figures) ---------- */
+
+.mem text {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--color-ink);
+}
+.mem .mem-muted {
+  fill: var(--color-muted);
+}
+.mem .mem-title {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  fill: var(--color-muted);
+}
+
+.mem-box {
+  fill: var(--color-surface);
+  stroke: var(--color-line-strong);
+  stroke-width: 1.25;
+}
+.mem-head {
+  fill: var(--color-raised);
+}
+.mem-rule {
+  stroke: var(--color-line-strong);
+  stroke-width: 1;
+}
+.mem-dot {
+  fill: var(--color-ink);
+}
+
+.mem-arrow {
+  fill: none;
+  stroke: #9aa8b7;
+  stroke-width: 1.5;
+}
+.mem-arrow.is-new {
+  stroke: var(--color-lime);
+  stroke-width: 2;
+}
+.mem-arrow.is-dangling {
+  stroke: var(--color-danger);
+  stroke-dasharray: 5 4;
+}
+.mem-arrow.is-faded {
+  opacity: 0.35;
+}
+
+/* An object that changed at this step */
+.mem-node.is-new .mem-box {
+  stroke: var(--color-lime);
+  stroke-width: 2;
+}
+.mem-row-lit {
+  fill: color-mix(in srgb, var(--color-lime) 16%, transparent);
+}
+
+/* A freed object stays visible while something still points at it */
+.mem-node.is-freed {
+  opacity: 0.5;
+}
+.mem-node.is-freed .mem-box {
+  stroke-dasharray: 4 3;
+}
+
+/* Arrows draw in when they first appear; nodes fade in. */
+@media (prefers-reduced-motion: no-preference) {
+  .mem-arrow.is-new:not(.is-dangling) {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: mem-draw 0.45s ease-out forwards;
+  }
+  .mem-node,
+  .mem-arrow.is-dangling {
+    animation: mem-fade 0.3s ease-out;
+  }
+}
+
+@keyframes mem-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes mem-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Demo editor ---------- */
+
+.code-kw {
+  color: #8fb0d6;
+}
+.code-type {
+  color: #7fc8bd;
+}
+.code-num {
+  color: #e2b07c;
+}
+.code-comment {
+  color: #5f6e7e;
+}
+
+/* Range slider for the demo timeline */
+.timeline {
+  appearance: none;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--color-lime) var(--fill, 0%),
+    var(--color-line-strong) var(--fill, 0%)
+  );
+  cursor: pointer;
+}
+.timeline::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-lime);
+  border: 3px solid var(--color-bg);
+  box-shadow: 0 0 0 1px var(--color-lime);
+}
+.timeline::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--color-lime);
+  border: 3px solid var(--color-bg);
+  box-shadow: 0 0 0 1px var(--color-lime);
+}
+
+/* FAQ disclosure marker */
+.faq summary::-webkit-details-marker {
+  display: none;
+}
+.faq summary .faq-mark {
+  transition: transform 0.2s ease;
+}
+.faq details[open] summary .faq-mark {
+  transform: rotate(45deg);
 }
